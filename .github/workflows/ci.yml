@@ -30,6 +30,12 @@ jobs:
         run: |
           extra_args=()
           if [[ "${{ runner.os }}" != "Windows" ]]; then
+            # Keep the suite's isolation assertions portable. macOS normally
+            # uses /private/var/folders, while these legacy tests explicitly
+            # verify that disposable paths contain "tmp" or "temp".
+            export TMPDIR=/tmp
+            export TEMP=/tmp
+            export TMP=/tmp
             # These legacy tests instantiate Tk or exercise the Windows-only
             # os.startfile API despite not carrying the gui marker.
             extra_args+=(
