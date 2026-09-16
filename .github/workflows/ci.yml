@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Reject unreviewed secrets
+        shell: bash
+        run: |
+          python -m pip install detect-secrets
+          git grep -Il -e . -- . | grep -v '^.secrets.baseline$' | xargs -n 100 detect-secrets-hook --baseline .secrets.baseline
+      - run: python -m pip install -e "apps/desktop[dev]"
+      - run: python -m pytest apps/desktop/tests -m "not integration and not gui and not slow" --no-cov
