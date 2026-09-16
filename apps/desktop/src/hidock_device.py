@@ -706,7 +706,12 @@ class HiDockJensen:
         if bus is None or address is None:
             return ""
 
-        device_path = f"/dev/bus/usb/{int(bus):03d}/{int(address):03d}"
+        try:
+            device_path = f"/dev/bus/usb/{int(bus):03d}/{int(address):03d}"
+        except (TypeError, ValueError):
+            # Some USB backends (and test doubles) do not expose numeric bus/address
+            # values. Diagnostics must never mask the original connection error.
+            return ""
         holders = self._get_linux_usb_holders_via_lsof(device_path)
         if holders:
             holder_text = ", ".join(dict.fromkeys(holders))

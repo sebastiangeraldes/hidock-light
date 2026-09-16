@@ -8,6 +8,7 @@ on:
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         python: ['3.11', '3.12']
@@ -24,4 +25,19 @@ jobs:
           python -m pip install detect-secrets
           git grep -Il -e . -- . | grep -v '^.secrets.baseline$' | xargs -n 100 detect-secrets-hook --baseline .secrets.baseline
       - run: python -m pip install -e "apps/desktop[dev]"
-      - run: python -m pytest apps/desktop/tests -m "not integration and not gui and not slow" --no-cov
+      - name: Run mock-only test suite
+        shell: bash
+        run: |
+          extra_args=()
+          if [[ "${{ runner.os }}" != "Windows" ]]; then
+            # These legacy tests instantiate Tk or exercise the Windows-only
+            # os.startfile API despite not carrying the gui marker.
+            extra_args+=(
+              --ignore=apps/desktop/tests/test_file_operations_gui.py
+              --ignore=apps/desktop/tests/test_settings_persistence.py
+              --ignore=apps/desktop/tests/test_settings_persistence_root_cause.py
+            )
+          fi
+          python -m pytest apps/desktop/tests \
+            -m "not integration and not gui and not slow" \
+            --no-cov "${extra_args[@]}"
