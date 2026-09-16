@@ -43,4 +43,3 @@ All device work must be mock-tested first. Never run exploratory USB scripts or 
 - P1 version-5 duration behavior based on hardware findings from [@fjbravo](https://github.com/fjbravo) in issue [#24](https://github.com/sgeraldes/hidock-next/issues/24).
 
 MIT licensed. HiDock is a trademark of its respective owner. This community project is not affiliated with or endorsed by HiDock.
-
