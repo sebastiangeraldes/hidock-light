@@ -28,7 +28,14 @@ jobs:
       - name: Run mock-only test suite
         shell: bash
         run: |
-          extra_args=()
+          # These legacy tests instantiate Tk or exercise the Windows-only
+          # os.startfile API despite not carrying the gui marker. Keep them
+          # outside this headless, mock-only job on every runner.
+          extra_args=(
+            --ignore=apps/desktop/tests/test_file_operations_gui.py
+            --ignore=apps/desktop/tests/test_settings_persistence.py
+            --ignore=apps/desktop/tests/test_settings_persistence_root_cause.py
+          )
           if [[ "${{ runner.os }}" != "Windows" ]]; then
             # Keep the suite's isolation assertions portable. macOS normally
             # uses /private/var/folders, while these legacy tests explicitly
@@ -36,13 +43,6 @@ jobs:
             export TMPDIR=/tmp
             export TEMP=/tmp
             export TMP=/tmp
-            # These legacy tests instantiate Tk or exercise the Windows-only
-            # os.startfile API despite not carrying the gui marker.
-            extra_args+=(
-              --ignore=apps/desktop/tests/test_file_operations_gui.py
-              --ignore=apps/desktop/tests/test_settings_persistence.py
-              --ignore=apps/desktop/tests/test_settings_persistence_root_cause.py
-            )
           fi
           python -m pytest apps/desktop/tests \
             -m "not integration and not gui and not slow" \
